@@ -125,7 +125,12 @@ class Ball(pygame.sprite.DirtySprite):
         if self.rect.left <= Ball.LEFT or self.rect.right >= Ball.RIGHT:
             winner = 1 if self.rect.left <= Ball.LEFT else 0
             self.not_crossed = False
-            self.rect.move_ip(-self.x_velocity, 0)
+            if self.rect.left <= Ball.LEFT:
+                xloc = Ball.LEFT
+            else:
+                xloc = Ball.RIGHT - Ball.BALL_DIMENSIONS
+            self.rect.move_ip(0, abs(xloc - self.rect.left) * (self.y_velocity / abs(self.y_velocity)))
+            self.rect.left = xloc
             self.event_manager.notify_game_end(winner)
 
     def reset(self):
