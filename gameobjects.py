@@ -61,7 +61,7 @@ class Paddle(pygame.sprite.DirtySprite):
 
 class Ball(pygame.sprite.DirtySprite):
     BALL_DIMENSIONS = 12
-    MOVE_DISTANCE = 3
+    MOVE_DISTANCE = 8
     TOP = HALF_BORDER
     BOTTOM = BOARD_HEIGHT - HALF_BORDER
     LEFT = HALF_BORDER
