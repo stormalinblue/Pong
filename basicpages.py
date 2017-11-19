@@ -1,10 +1,11 @@
 from colors import ORANGE, CORNSILK, WHITE, BLACK
-from fonts import XLARGE, LARGE, MEDLARGE
+from fonts import SMALL, XLARGE, LARGE, MEDLARGE
 from properties import SCREEN_CENTER, HALF_WIDTH
 from button import Button
 from eventmanager import EventManager
 import pygame
 from properties import *
+from leaderboard import LeaderBoard
 
 class Page(object):
     def __init__(self, screen, color, event_manager):
@@ -86,18 +87,46 @@ class TextInput(Page):
         super(TextInput, self).clean()
         self.event_manager.remove_input_listener(self.add_text)
 
-class LeaderBoard(Page):
+class LeaderBoardPage(Page):
     def __init__(self, screen, event_manager):
-        super(LeaderBoard, self).__init__(screen, CORNSILK, event_manager)
+        super(LeaderBoardPage, self).__init__(screen, CORNSILK, event_manager)
 
         header = LARGE.render("Leaderboard", True, ORANGE)
         header_rect = header.get_rect()
         header_rect.midtop = (HALF_WIDTH, 20)
+        
+        heading = SMALL.render("Rank |         Name         | Matches Played | Wins | Losses | Point Difference | Win Percentage", True, ORANGE)
+        heading_rect = heading.get_rect()
+        heading_rect.midtop = (HALF_WIDTH, 150)
 
-        self.texts.extend([(header, header_rect)])
+        self.texts.extend([(header, header_rect), (heading, heading_rect)])
 
-
+        self.leaderboard = LeaderBoard()
+    
+    def display(self):
+        del self.texts[2:]
+        TOP = self.texts[1][1].top + 35
+        
+        format_string = "{rank:>4d} | {name:20s} | {matches_played:>14d} | {wins:>4d} | {losses:>6d} | {point_diff:>16d} | {win_per:>14.2f}"
+        for index, leader in enumerate(self.leaderboard.get_top_number(10)):
+            res = SMALL.render(format_string.format(**dict(zip(("rank", "name", "matches_played", "wins", "losses", "point_diff", 
+            "win_per"), leader))), True, BLACK)
+            res_rect = res.get_rect()
+            res_rect.top = TOP + 35 * index
+            res_rect.centerx = HALF_WIDTH
+            self.texts.append((res, res_rect))
+        
+        super(LeaderBoardPage, self).display()
 
 if __name__ == '__main__':
-    B = Browser()
-    B.run()
+    from properties import SCREEN_HEIGHT, SCREEN_WIDTH
+    from eventmanager import EventManager
+    c = pygame.time.Clock()
+    s = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    e = EventManager()
+    l = LeaderBoardPage(s, e)
+    l.display()
+    while True:
+        e.run()
+        c.tick(30)
+    
