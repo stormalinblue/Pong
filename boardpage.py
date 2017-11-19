@@ -4,6 +4,7 @@ from gameobjects import Paddle, Ball
 from colors import CORNSILK, ORANGE, RED, WHITE, BLACK
 from fonts import NORMAL, MEDLARGE
 from basicpages import Page
+from leaderboard import LeaderBoard
 
 LINE_THICKNESS = 2
 
@@ -23,7 +24,7 @@ class BoardPage(Page):
     ARENA = ARENA
     WINNING_SCORE = 5
 
-    def __init__(self, screen, event_manager, names):
+    def __init__(self, screen, event_manager, names, finish_cb):
         super(BoardPage, self).__init__(screen, CORNSILK, event_manager)
 
         def game_end_listener(_):
@@ -32,6 +33,7 @@ class BoardPage(Page):
                 event_manager.add_timer(1, self.reset)
             else:
                 self.declare_winner()
+                event_manager.add_timer(3, finish_cb)
 
         event_manager.add_game_end_listener(game_end_listener)
         event_manager.add_tick_listener(self.run)
@@ -47,10 +49,11 @@ class BoardPage(Page):
         self.ball_group = pygame.sprite.RenderUpdates()
         self.ball_group.add(self.ball)
 
-        self.suspended = False
+        self.suspended = True
         self.score_board = ScoreBoard(names, screen, event_manager)
     
     def declare_winner(self):
+        self.score_board.store_result()
         winner = 0 if self.score_board.scores[0] == BoardPage.WINNING_SCORE else 1
         name = MEDLARGE.render(self.score_board.names[winner], True, BLACK)
         name_rect = name.get_rect()
@@ -67,9 +70,12 @@ class BoardPage(Page):
     def display(self):
         super(BoardPage, self).display()
         self.score_board.render()
-        self.reset()
+        self.reset(2)
+    
+    def start(self):
+        self.suspended = False
 
-    def reset(self):
+    def reset(self, delay=1):
         self.screen.blit(ARENA, (0, 0))
 
         self.paddle_1.reset()
@@ -83,7 +89,7 @@ class BoardPage(Page):
         self.ball_group.draw(self.screen)
 
         pygame.display.flip()
-        self.suspended = False
+        self.event_manager.add_timer(delay, self.start)
     
     def clean(self):
         super(BoardPage, self).clean()
@@ -109,6 +115,7 @@ class ScoreBoard(object):
         self.background = pygame.Surface((SCREEN_WIDTH, CONTROLS_HEIGHT))
         self.rect = self.background.get_rect()
         self.rect.topleft = (0, BOARD_HEIGHT)
+        self.leaderboard = LeaderBoard()
 
         self.scores = [0, 0]
 
@@ -129,4 +136,8 @@ class ScoreBoard(object):
                 (HALF_WIDTH * number + HALF_BORDER, HALF_BORDER))
         self.screen.blit(self.background, self.rect)
         pygame.display.update(self.rect)
+    
+    def store_result(self):
+        for index in range(2):
+            self.leaderboard.store_match_result(self.names[index], self.scores[index] - self.scores[index ^ 1])
 
