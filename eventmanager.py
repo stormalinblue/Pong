@@ -17,6 +17,7 @@ class EventManager(object):
         self.input_listeners = set()
         self.click_listeners = {}
         self.tick_listeners = set()
+        self.num_timers = 0
 
     def add_exit_listener(self, listener):
         self.exit_listeners.add(listener)
@@ -40,24 +41,24 @@ class EventManager(object):
 
     def add_timer(self, seconds, listener):
         heapq.heappush(self.timed, (self.ticker +
-                                    int(seconds * FPS), listener))
-        print "Timer added for", int(seconds * FPS)
+                                    int(seconds * FPS), self.num_timers, listener))
+        self.num_timers += 1
 
     def add_input_listener(self, listener):
         self.input_listeners.add(listener)
-    
+
     def remove_input_listener(self, listener):
         self.input_listeners.remove(listener)
-    
+
     def add_click_listener(self, listener, rect):
         self.click_listeners[listener] = rect
-    
+
     def remove_click_listener(self, listener):
         del self.click_listeners[listener]
 
     def add_tick_listener(self, listener):
         self.tick_listeners.add(listener)
-    
+
     def remove_tick_listener(self, listener):
         self.tick_listeners.remove(listener)
 
@@ -101,9 +102,7 @@ class EventManager(object):
                         listener()
 
         while self.timed and self.ticker >= self.timed[0][0]:
-            print self.timed[0], "executed"
-            self.timed[0][1]()
+            self.timed[0][2]()
             heapq.heappop(self.timed)
-            print self.timed[0]
 
         self.ticker += 1

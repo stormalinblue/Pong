@@ -22,13 +22,14 @@ pygame.draw.circle(ARENA, ORANGE, (SCREEN_WIDTH - HALF_BORDER, HALF_HEIGHT), 2 *
 class BoardPage(Page):
     LINE_THICKNESS = 2
     ARENA = ARENA
-    WINNING_SCORE = 5
+    WINNING_SCORE = 3
 
     def __init__(self, screen, event_manager, names, finish_cb):
         super(BoardPage, self).__init__(screen, CORNSILK, event_manager)
 
-        def game_end_listener(_):
+        def game_end_listener(winner):
             self.suspended = True
+            self.score_board.update(winner)
             if not any(score == BoardPage.WINNING_SCORE for score in self.score_board.scores):
                 event_manager.add_timer(1, self.reset)
             else:
@@ -75,7 +76,7 @@ class BoardPage(Page):
     def start(self):
         self.suspended = False
 
-    def reset(self, delay=1):
+    def reset(self, delay=0):
         self.screen.blit(ARENA, (0, 0))
 
         self.paddle_1.reset()
@@ -119,11 +120,9 @@ class ScoreBoard(object):
 
         self.scores = [0, 0]
 
-        def update_score(winner):
-            self.scores[winner] += 1
-            self.render()
-
-        event_manager.add_game_end_listener(update_score)
+    def update(self, winner):
+        self.scores[winner] += 1
+        self.render()
 
     def render(self):
         self.background.fill(ORANGE)
